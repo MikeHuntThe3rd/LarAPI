@@ -1,0 +1,274 @@
+openapi: 3.0.3
+info:
+  title: Counties & Cities API
+  version: 1.0.0
+  description: REST API for managing counties and cities.
+servers:
+  - url: http://localhost:8000/api
+tags:
+  - name: County
+  - name: City
+
+paths:
+  /counties:
+    get:
+      tags: [County]
+      operationId: getCounties
+      summary: List counties
+      description: Returns all counties ordered by name, with the summed population of their cities.
+      parameters:
+        - name: search
+          in: query
+          description: Filters by county name or badge (partial match).
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of counties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  counties:
+                    type: array
+                    items: { $ref: '#/components/schemas/CountyWithPopulation' }
+
+  /county:
+    post:
+      tags: [County]
+      operationId: storeCounty
+      summary: Create county
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CountyInput' }
+      responses:
+        '201':
+          description: County created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: County created. }
+                  data: { $ref: '#/components/schemas/County' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /county/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [County]
+      operationId: updateCounty
+      summary: Update county
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CountyInput' }
+      responses:
+        '200':
+          description: County updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: County updated. }
+                  data: { $ref: '#/components/schemas/County' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [County]
+      operationId: destroyCounty
+      summary: Delete county
+      description: Deletes the county if it exists; succeeds silently otherwise.
+      responses:
+        '200':
+          description: County deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: County deleted. }
+
+  /cities:
+    get:
+      tags: [City]
+      operationId: getCities
+      summary: List cities
+      description: Returns cities ordered by name, 15 per page (Laravel paginator format).
+      parameters:
+        - name: search
+          in: query
+          description: Filters by city name or zip code (partial match).
+          schema: { type: string }
+        - name: county_id
+          in: query
+          description: Filters by county id.
+          schema: { type: integer }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          description: Paginated cities and all counties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cities: { $ref: '#/components/schemas/CityPage' }
+                  counties:
+                    type: array
+                    items: { $ref: '#/components/schemas/County' }
+
+  /city:
+    post:
+      tags: [City]
+      operationId: storeCity
+      summary: Create city
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CityInput' }
+      responses:
+        '201':
+          description: City created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: City created. }
+                  data: { $ref: '#/components/schemas/City' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /city/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [City]
+      operationId: updateCity
+      summary: Update city
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CityInput' }
+      responses:
+        '200':
+          description: City updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: City updated. }
+                  data: { $ref: '#/components/schemas/City' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [City]
+      operationId: destroyCity
+      summary: Delete city
+      description: Deletes the city if it exists; succeeds silently otherwise.
+      responses:
+        '200':
+          description: City deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: City deleted. }
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+  responses:
+    NotFound:
+      description: Record does not exist
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+    ValidationError:
+      description: "One or more fields are missing or invalid (send Accept: application/json)"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: The name field is required. }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+
+  schemas:
+    County:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Pest }
+        badge: { type: string, example: PE }
+    CountyWithPopulation:
+      allOf:
+        - $ref: '#/components/schemas/County'
+        - type: object
+          properties:
+            total_population:
+              type: integer
+              description: Sum of the population of the county's cities (0 if none).
+              example: 1250000
+    CountyInput:
+      type: object
+      required: [name, badge]
+      properties:
+        name: { type: string }
+        badge: { type: string }
+
+    City:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        zip_code: { type: integer, example: 1011 }
+        city: { type: string, example: Budapest }
+        population: { type: integer, example: 1700000 }
+        id_county: { type: integer, example: 1 }
+    CityWithCounty:
+      allOf:
+        - $ref: '#/components/schemas/City'
+        - type: object
+          properties:
+            county_name: { type: string, example: Pest }
+    CityInput:
+      type: object
+      required: [zip_code, city, population, id_county]
+      properties:
+        zip_code: { type: integer }
+        city: { type: string }
+        population: { type: integer }
+        id_county: { type: integer }
+    CityPage:
+      type: object
+      properties:
+        current_page: { type: integer }
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/CityWithCounty' }
+        per_page: { type: integer, example: 15 }
+        last_page: { type: integer }
+        total: { type: integer }
