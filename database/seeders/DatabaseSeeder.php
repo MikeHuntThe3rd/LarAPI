@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\County;
 use App\Models\City;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
+use App\Models\County;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,8 +17,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::factory()->create([
+            'name' => 'smegma',
+            'email' => 'user@example.com',
+            'password' => 'asd',
+        ]);
+
         County::factory()->count(3)
                 ->has(City::factory()->count(8))
                 ->create();
+
     }
 }

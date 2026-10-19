@@ -3,6 +3,39 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CountyController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\AuthController;
+
+/**
+ * @api {post} /login Login
+ * @apiName Login
+ * @apiGroup Auth
+ * @apiDescription Authenticates a user and returns an API token for use with protected endpoints.
+ *
+ * @apiBody {String} email User email address.
+ * @apiBody {String} password User password.
+ *
+ * @apiSuccess {String} message Result message.
+ * @apiSuccess {String} token Sanctum API token to be sent as a Bearer token.
+ *
+ * @apiError (401) Unauthorized Invalid credentials.
+ * @apiError (422) ValidationError One or more fields are missing or invalid.
+ *
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "message": "Login successful.",
+ *       "token": "1|abcdefghijklmnopqrstuvwxyz1234567890"
+ *     }
+ *
+ * @apiErrorExample {json} Unauthorized-Error:
+ *     HTTP/1.1 401 Unauthorized
+ *     { "message": "Invalid credentials." }
+ *
+ * @apiErrorExample {json} Validation-Error:
+ *     HTTP/1.1 422 Unprocessable Entity
+ *     { "message": "The email field is required.", "errors": { "email": ["The email field is required."] } }
+ */
+Route::post('/login', [AuthController::class, 'login']);
 
 //==== County ====
 
@@ -51,7 +84,7 @@ Route::get('/counties', [CountyController::class, 'index'])->name('counties.inde
  *     HTTP/1.1 422 Unprocessable Entity
  *     { "message": "The name field is required.", "errors": { "name": ["The name field is required."] } }
  */
-Route::post('/county', [CountyController::class, 'store'])->name('counties.store');
+Route::post('/county', [CountyController::class, 'store'])->name('counties.store')->middleware('auth:sanctum');
 
 /**
  * @api {delete} /county/:id Delete county
@@ -67,7 +100,7 @@ Route::post('/county', [CountyController::class, 'store'])->name('counties.store
  *     HTTP/1.1 200 OK
  *     { "message": "County deleted." }
  */
-Route::delete('/county/{id}', [CountyController::class, 'destroy'])->name('counties.destroy');
+Route::delete('/county/{id}', [CountyController::class, 'destroy'])->name('counties.destroy')->middleware('auth:sanctum');
 
 /**
  * @api {patch} /county/:id Update county
@@ -88,7 +121,7 @@ Route::delete('/county/{id}', [CountyController::class, 'destroy'])->name('count
  *     HTTP/1.1 200 OK
  *     { "message": "County updated.", "data": { "id": 1, "name": "Pest", "badge": "PE" } }
  */
-Route::patch('/county/{id}', [CountyController::class, 'update'])->name('counties.update');
+Route::patch('/county/{id}', [CountyController::class, 'update'])->name('counties.update')->middleware('auth:sanctum');
 
 //==== City ====
 
@@ -153,7 +186,7 @@ Route::get('/cities', [CityController::class, 'index'])->name('cities.index');
  *       "data": { "id": 5, "zip_code": 8000, "city": "Székesfehérvár", "population": 95000, "id_county": 2 }
  *     }
  */
-Route::post('/city', [CityController::class, 'store'])->name('cities.store');
+Route::post('/city', [CityController::class, 'store'])->name('cities.store')->middleware('auth:sanctum');
 
 /**
  * @api {delete} /city/:id Delete city
@@ -169,7 +202,7 @@ Route::post('/city', [CityController::class, 'store'])->name('cities.store');
  *     HTTP/1.1 200 OK
  *     { "message": "City deleted." }
  */
-Route::delete('/city/{id}', [CityController::class, 'destroy'])->name('cities.destroy');
+Route::delete('/city/{id}', [CityController::class, 'destroy'])->name('cities.destroy')->middleware('auth:sanctum');
 
 /**
  * @api {patch} /city/:id Update city
@@ -195,4 +228,4 @@ Route::delete('/city/{id}', [CityController::class, 'destroy'])->name('cities.de
  *       "data": { "id": 1, "zip_code": 1011, "city": "Budapest", "population": 1800000, "id_county": 1 }
  *     }
  */
-Route::patch('/city/{id}', [CityController::class, 'update'])->name('cities.update');
+Route::patch('/city/{id}', [CityController::class, 'update'])->name('cities.update')->middleware('auth:sanctum');
